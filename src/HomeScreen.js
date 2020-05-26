@@ -63,6 +63,35 @@ export default class HomeScreen extends React.Component {
 
   componentDidMount() {
     this._getLocation();
+
+    this.watchID = navigator.geolocation.watchPosition(
+      position => {
+        const { routeCoordinates, distanceTravelled } = this.state;
+        const { latitude, longitude } = position.coords;
+
+        const newCoordinate = {
+          latitude,
+          longitude
+        };
+
+        this.setState({
+          latitude,
+          longitude,
+        })
+      },
+      error => console.log(error),
+     { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+    )
+
+    // navigator.geolocation.getCurrentPosition(position => {
+    //     this.setState({
+    //       latitude: position.coords.latitude,
+    //       longitude: position.coords.longitude,
+    //       errorMessage: ''
+    //     })
+    // }, error => this.setState({
+    //   errorMessage: error.message
+    // }), {enableHighAccuracy: true,timeout:20000,maximumAge:2000});
   }
 
   _getLocation = async () => {
@@ -90,7 +119,7 @@ export default class HomeScreen extends React.Component {
     console.log("lalong" , this.state.location.coords.latitude)
     console.log("lalong2" , this.state.location.coords.longitude)
 
-    const data = this.distanceInKmBetweenEarthCoordinates(this.state.location.coords.latitude,this.state.location.coords.longitude,la2,lo2)
+    const data = this.distanceInKmBetweenEarthCoordinates(this.state.latitude,this.state.longitude,la2,lo2)
     console.log("get", data);
     // const remanin = data;
     // const errorMessage = 'asdasdasdasdas';
@@ -123,7 +152,9 @@ export default class HomeScreen extends React.Component {
     this.state = {
       location: {},
       errorMessage: 'asdasdasd',
-      remanin:''
+      remanin:'',
+      latitude:0,
+      longitude:0
     }
     this.onGet = this.onGet.bind(this)
     this.distanceInKmBetweenEarthCoordinates = this.distanceInKmBetweenEarthCoordinates.bind(this)
