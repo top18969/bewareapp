@@ -7,11 +7,13 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  Alert
 } from 'react-native';
 import { Block, Button, TextView } from './components';
 import { Colors } from './color';
 const W = Dimensions.get('window').width;
 import Feather from 'react-native-vector-icons/Feather';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
@@ -56,13 +58,45 @@ const styles = StyleSheet.create({
     marginTop: 15,
     padding: 15,
   },
+
 });
 
-export default class HomeScreen extends React.Component {
-  
 
-  componentDidMount() {
-    this._getLocation();
+export default class HomeScreen extends React.Component {
+
+  constructor(props) {
+    super(props)
+    this.watchID = 0;
+    this.state = {
+      location: {},
+      errorMessage: 'asdasdasd',
+      remanin:'',
+      latitude:0,
+      longitude:0,
+      start: false,
+      activeSwitch: 1,
+      btnBTS: {
+        width:"50%",
+        borderRadius:40, 
+        height:'40',
+        color:'#fff',
+        fontcolor: '#000'
+      },
+      btnMRT: {
+        width:"50%",
+        borderRadius:0, 
+        height:'40',
+        color:'#000',
+        fontcolor: '#fff'
+      },
+    }
+    this.onGet = this.onGet.bind(this)
+    this.pressToCal = this.pressToCal.bind(this)
+    this.btsPress = this.btsPress.bind(this)
+    this.mrtPress = this.mrtPress.bind(this)
+    this.distanceInKmBetweenEarthCoordinates = this.distanceInKmBetweenEarthCoordinates.bind(this)
+    this.createTwoButtonAlert = this.createTwoButtonAlert.bind(this);
+    this.degreesToRadians = this.degreesToRadians.bind(this)
 
     this.watchID = navigator.geolocation.watchPosition(
       position => {
@@ -78,20 +112,19 @@ export default class HomeScreen extends React.Component {
           latitude,
           longitude,
         })
+        if(this.state.start == true){
+          this.onGet();
+        }
       },
       error => console.log(error),
-     { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+     { enableHighAccuracy: true}
     )
+   
+  }
+  
 
-    // navigator.geolocation.getCurrentPosition(position => {
-    //     this.setState({
-    //       latitude: position.coords.latitude,
-    //       longitude: position.coords.longitude,
-    //       errorMessage: ''
-    //     })
-    // }, error => this.setState({
-    //   errorMessage: error.message
-    // }), {enableHighAccuracy: true,timeout:20000,maximumAge:2000});
+  componentDidMount() {
+    this._getLocation();
   }
 
   _getLocation = async () => {
@@ -105,19 +138,89 @@ export default class HomeScreen extends React.Component {
       })
     }
 
-    const location = await Location.getCurrentPositionAsync();
+    // const location = await Location.getCurrentPositionAsync();
 
-    this.setState({
-      location
-    })
+    // this.setState({
+    //   location
+    // })
    
+  }
+
+  componentWillUnmount(){
+    navigator.geolocation.clearWatch(this.watchID);
+  }
+
+  pressToCal(){
+    // this.watchID = navigator.geolocation.watchPosition(
+    //   position => {
+    //     const { routeCoordinates, distanceTravelled } = this.state;
+    //     const { latitude, longitude } = position.coords;
+
+    //     const newCoordinate = {
+    //       latitude,
+    //       longitude
+    //     };
+
+    //     this.setState({
+    //       latitude,
+    //       longitude,
+    //     })
+
+    //     this.onGet();
+    //   },
+    //   error => console.log(error),
+    //  { enableHighAccuracy: true}
+    // )
+    this.setState({
+      start: !this.state.start
+    })
+
+    
+    console.log(this.state.start);
+  }
+  btsPress() {
+    this.setState({
+      btnBTS: {
+        width:"50%",
+        borderRadius:40, 
+        height:'40',
+        color:'#fff',
+        fontcolor: '#000'
+      },
+      btnMRT: {
+        width:"50%",
+        borderRadius:0, 
+        height:'40',
+        color:'#000',
+        fontcolor: '#fff'
+      },
+    })
+  }
+
+  mrtPress() {
+    this.setState({
+      btnBTS: {
+        width:"50%",
+        borderRadius:0, 
+        height:'40',
+        color:'#000',
+        fontcolor: '#fff'
+      },
+      btnMRT: {
+        width:"50%",
+        borderRadius:40, 
+        height:'40',
+        color:'#fff',
+        fontcolor: '#000'
+      },
+    })
   }
 
   onGet = () => {
     const la2 = 13.584410;
     const lo2 = 100.608034;
-    console.log("lalong" , this.state.location.coords.latitude)
-    console.log("lalong2" , this.state.location.coords.longitude)
+    // console.log("lalong" , this.state.location.coords.latitude)
+    // console.log("lalong2" , this.state.location.coords.longitude)
 
     const data = this.distanceInKmBetweenEarthCoordinates(this.state.latitude,this.state.longitude,la2,lo2)
     console.log("get", data);
@@ -131,6 +234,23 @@ export default class HomeScreen extends React.Component {
   degreesToRadians(degrees) {
     return degrees * Math.PI / 180;
   }
+
+  createTwoButtonAlert = () =>
+    Alert.alert(
+      this.state.start == true ? "Stop!" : "Start..",
+      this.state.start == true ? "application will be stop !" :"application will be running...",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        { text: "OK", onPress: () => this.pressToCal() }
+      ],
+      { cancelable: false }
+    );
+    
+
   
   distanceInKmBetweenEarthCoordinates(lat1, lon1, lat2, lon2) {
     var earthRadiusKm = 6371;
@@ -147,37 +267,23 @@ export default class HomeScreen extends React.Component {
     return earthRadiusKm * c;
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      location: {},
-      errorMessage: 'asdasdasd',
-      remanin:'',
-      latitude:0,
-      longitude:0
-    }
-    this.onGet = this.onGet.bind(this)
-    this.distanceInKmBetweenEarthCoordinates = this.distanceInKmBetweenEarthCoordinates.bind(this)
-    this.degreesToRadians = this.degreesToRadians.bind(this)
-   
-  }
+  
 
   render() {
     return (
       <ScrollView style={{ flex: 1, backgroundColor: '#3e3e3e' }}>
-        <Block height={100} middle color="#ffc107">
-
+        <Block height={100} middle centered color="#ffc107">
+        <TextView h6 color="#fff" middle centered>LOGO HERE</TextView>
         </Block>
-        <Block height={50} color="#000" direction="row">
-          <Button width="50%" borderRadius={40} centered middle height={40} color="#fff">
-            <TextView h6 >BTS</TextView>
+        <Block height="auto" color="#000" direction="row">
+          <Button width="50%" borderRadius={this.state.btnBTS.borderRadius} centered middle height={40} color={this.state.btnBTS.color} onPress={this.btsPress} disabled={this.state.start}>
+            <TextView h6 color={this.state.btnBTS.fontcolor}>BTS</TextView>
           </Button>
-          <Button width="50%" centered middle height={40} color="#000">
-            <TextView h6 color="#fff">MRT</TextView>
+          <Button width="50%" borderRadius={this.state.btnMRT.borderRadius} centered middle height={40} color={this.state.btnMRT.color} onPress={this.mrtPress} disabled={this.state.start}>
+            <TextView h6 color={this.state.btnMRT.fontcolor}>MRT</TextView>
           </Button>
-
         </Block>
-        <Block height={100}>
+        <Block height={70}>
 
         </Block>
         <Block block middle color="#3e3e3e">
@@ -187,11 +293,11 @@ export default class HomeScreen extends React.Component {
               borderWidth={4}
               borderColor="#000"
               margin={20}
-              borderRadius={30}>
-              <Block direction="row" paddingHorizontal={15} middle>
+              borderRadius={30} disabled={this.state.start}>
+              <Block direction="row" centered height="auto" width="auto" paddingHorizontal={20} middle>
                 <Feather name="map-pin" size={16} color={Colors.blue1} />
-                <Block block padding={10}>
-                  <TextView h6>Indonesia</TextView>
+                <Block direction="row" centered height="auto" width="auto" padding={10} middle>
+                  <TextView h6>123123</TextView>
                 </Block>
                 <Feather name="chevron-down" size={16} color={Colors.blue1} />
               </Block>
@@ -207,10 +313,10 @@ export default class HomeScreen extends React.Component {
               margin={20}
               borderRadius={90}
               width={170}
-              height={170} onPress={this.onGet}>
+              height={170} onPress={this.createTwoButtonAlert}>
               <Block direction="row" centered height={162} paddingHorizontal={20} middle>
-                <Block paddingHorizontal={10}></Block>
-                <Feather name="play" size={100} color="#000" />
+                <Block paddingHorizontal={this.state.start == true ? 0 : 10}></Block>
+                <FontAwesome name={this.state.start == true ? "stop" : "play"} size={this.state.start == true ? 80 : 100} color="#000" />
               </Block>
             </Button>
           </Block>

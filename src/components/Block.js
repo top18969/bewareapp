@@ -44,6 +44,7 @@ const Block = ({
   justifyContent,
   borderRadius,
   shadow,
+  alignSelf,
   ...props
 }) => {
   const styleComponent = [
@@ -51,6 +52,7 @@ const Block = ({
     margin && {margin},
     padding && {padding},
     width && {width},
+    alignSelf && {alignSelf},
     height && {height},
     border && {borderWidth: 1, borderColor: 'gray'},
     borderWidth && {borderWidth},
